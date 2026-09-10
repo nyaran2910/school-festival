@@ -1,0 +1,15 @@
+[submodule "apps/kojo"]
+	path = apps/kojo
+	url = https://github.com/22060/2026_koreisai_HW.git
+
+[submodule "apps/PhoneControllerSignal"]
+	path = apps/PhoneControllerSignal
+	url = https://github.com/nyaran2910/KosenChanbaraPhoneController.git
+
+[submodule "apps/KosenChanbara"]
+	path = apps/KosenChanbara
+	url = https://github.com/nyaran2910/KosenChanbara.git
+
+[submodule "apps/kosen-chanbara-controller"]
+	path = apps/kosen-chanbara-controller
+	url = https://github.com/nyaran2910/kosen-chanbara-controller.git
