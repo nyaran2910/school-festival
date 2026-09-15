@@ -9,7 +9,3 @@
 [submodule "apps/unity"]
 	path = apps/unity
 	url = https://github.com/nyaran2910/KosenChanbara.git
-
-[submodule "apps/HW"]
-	path = apps/HW
-	url = https://github.com/nyaran2910/kosen-chanbara-controller.git
