@@ -16,7 +16,7 @@ cd school-festival
 make
 ```
 
-Docker Desktopが起動していれば、コマンドがコントローラー用Dockerイメージをpullしてサーバーを起動し、Unityの接続設定を自動生成します。Unity Hubで `apps/unity` を開き、Unity `6000.3.21f1` で `Assets/Scenes/BattleGround.unity` を開いてPlayするとQRコードが表示されます。QRコードをスマートフォンで読み取り、`センサーを使う` と `リセンター` を実行してください。PCとスマートフォンは同じWi-Fiでなくても接続できます。
+Docker Desktopが起動していれば、コマンドがコントローラー用Dockerイメージをpullしてサーバーを起動し、Unityの接続設定を自動生成します。Unity Hubで `apps/unity` を開き、Unity `6000.3.21f1` で `Assets/Scenes/BattleGround.unity` を開いてPlayするとQRコードが表示されます。QRコードをスマートフォンで読み取り、`センサーを使う` と `リセンター` を実行してください。別のWi-FiからはSTUNを使って直接接続を試みます。ネットワーク制限によってはTURNサーバーが必要です。
 
 サーバーを停止するときは、ルートディレクトリで次を実行します。
 
