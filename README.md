@@ -13,10 +13,10 @@
 ```sh
 git clone --recurse-submodules https://github.com/nyaran2910/school-festival.git
 cd school-festival
-make phone-controller
+make
 ```
 
-その後、Unity Hubで `apps/unity` を開き、Unity `6000.3.21f1` で `Assets/Scenes/BattleGround.unity` を開いてPlayします。ゲーム画面に表示されたP1/P2のQRコードをスマートフォンで読み取り、スマートフォン側で `センサーを使う` と `リセンター` を実行すると、スマホをコントローラーとして使えます。
+Docker Desktopが起動していれば、コマンドがコントローラー用Dockerイメージをpullしてサーバーを起動し、Unityの接続設定を自動生成します。Unity Hubで `apps/unity` を開き、Unity `6000.3.21f1` で `Assets/Scenes/BattleGround.unity` を開いてPlayするとQRコードが表示されます。QRコードをスマートフォンで読み取り、`センサーを使う` と `リセンター` を実行してください。PCとスマートフォンは同じWi-Fiでなくても接続できます。
 
 サーバーを停止するときは、ルートディレクトリで次を実行します。
 

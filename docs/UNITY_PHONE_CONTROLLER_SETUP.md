@@ -6,11 +6,10 @@
 
 - Git
 - Unity Hub と Unity `6000.3.21f1`
-- Node.js `22` 以上（npmを含む）
-- `make`、`curl`、`openssl`
-- PCとスマートフォンが接続された同じWi-Fi
+- Docker Desktop
+- `make`
+- Dockerイメージをpullできるインターネット接続
 - センサーを利用できるスマートフォンのブラウザ（SafariまたはChrome推奨）
-- 初回起動時に依存パッケージを取得できるインターネット接続
 
 Windowsでは、`make` とシェルを利用できる Git Bash または WSL で実行してください。
 
@@ -42,10 +41,10 @@ git -C apps/unity switch --track -c sanuka origin/sanuka
 リポジトリのルートディレクトリで、次を実行します。ルートのMakefileがスマホ用サーバーを起動し、Unity用の接続設定を自動生成します。
 
 ```sh
-make phone-controller
+make
 ```
 
-初回は、依存パッケージのインストールとビルドが自動で実行されます。起動に成功すると、スマートフォンで開くためのHTTPS URLが表示されます。URLは後でUnity画面に表示されるQRコードにも埋め込まれます。
+Dockerイメージをpullしてコンテナを起動し、Unity用の接続設定を自動生成します。起動に成功すると、スマートフォンで開くためのHTTPS URLが表示されます。URLはUnity画面に表示されるQRコードにも埋め込まれます。UnityでPlayを押すとQRコードが表示され、PCとスマートフォンが別のWi-Fiやモバイル通信でも接続できます。
 
 サーバーはバックグラウンドで動作します。状態確認、ログ表示、停止は次のコマンドで行えます。
 
@@ -55,7 +54,7 @@ make phone-controller-logs
 make phone-controller-stop
 ```
 
-停止した後に再起動する場合は、ルートディレクトリで再度 `make phone-controller` を実行します。
+停止した後に再起動する場合は、ルートディレクトリで再度 `make` を実行します。
 
 ```sh
 make phone-controller
@@ -65,7 +64,7 @@ make phone-controller
 
 Git Bashでは上記のコマンドをそのまま実行できます。PowerShellからは、Git BashまたはWSLのターミナルを使ってください。
 
-`make phone-controller` はルートの `apps/phone` に正しいUnity設定パスを渡すため、個別の環境変数指定は不要です。
+`make` はルートの `apps/phone` に正しいUnity設定パスを渡すため、個別の環境変数指定は不要です。
 
 `controller-connection.json` には接続用の一時的なキーが書き込まれます。これはローカル実行時に自動生成されるファイルなので、コミットしないでください。
 
@@ -88,7 +87,7 @@ school-festival/apps/unity/Assets/StreamingAssets/controller-connection.json
 
 ## 5. スマートフォンを接続する
 
-1. PCとスマートフォンを同じWi-Fiに接続する。
+1. スマートフォンがインターネットに接続できることを確認する。PCと同じWi-Fiである必要はありません。
 2. Unity画面に表示されたP1またはP2のQRコードをスマートフォンで読み取る。
 3. スマートフォン側で `センサーを使う` をタップする。
 4. モーションセンサーの利用許可を求められたら許可する。
@@ -128,7 +127,7 @@ make phone-controller-stop
 
 - `make phone-controller-status` と `make phone-controller-logs` でサーバーが動作しているか確認する。
 - `make phone-controller` 実行時に表示された最新のURLを使う。
-- PCとスマートフォンが同じWi-Fiにいるか確認する。
+- PCとスマートフォンがインターネットに接続できるか確認する。
 - VPN、ゲストWi-Fi、Wi-Fiの端末間通信遮断（AP isolation）が有効になっていないか確認する。
 - PCのファイアウォールがローカル通信を遮断していないか確認する。
 
@@ -150,6 +149,6 @@ make phone-controller-stop
 ### UnityにQRコードが出ない
 
 - `apps/unity/Assets/StreamingAssets/controller-connection.json` が存在するか確認する。
-- ルートディレクトリで `make phone-controller` を実行したか確認する。
+- ルートディレクトリで `make` を実行したか確認する。
 - Unityで `Assets/Scenes/BattleGround.unity` を開いているか確認する。
 - Unity Consoleの `Could not read ... controller-connection.json` などのエラーを確認する。
