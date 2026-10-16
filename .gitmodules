@@ -11,4 +11,4 @@
 	url = https://github.com/nyaran2910/KosenChanbara.git
 [submodule "apps/score-server"]
 	path = apps/score-server
-	url = https://github.com/nyaran2910/KosenChanbaraScoreServer.git
+	url = https://github.com/nyaran2910/ChanbaraScoreServer.git
