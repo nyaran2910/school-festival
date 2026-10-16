@@ -1,17 +1,19 @@
 # Unity開発環境とスマホコントローラーのセットアップ
 
+新しいゲーム内登録・Escメニュー・スマホ軸調整の仕様は [コントローラ登録仕様](CONTROLLER_PAIRING.md) を参照してください。実機もスマホもゲーム内の同じ入口から登録します。
+
 この手順では、このリポジトリをクローンした開発者が、Unityのゲーム画面を起動し、スマートフォンをP1/P2のコントローラーとして接続してテストするまでを説明します。
 
 ## 1. 必要なもの
 
 - Git
 - Unity Hub と Unity `6000.3.21f1`
-- `make`
+- `just`
 - センサーを利用できるスマートフォンのブラウザ（SafariまたはChrome推奨）
 
-Dockerで起動する場合はDocker Desktopとイメージをpullできるインターネット接続が必要です。ローカルのソースから起動する場合はNode.js 22以上とnpmが必要です。
+Mac/Linux開発時はNode.js 22以上、npm、tmuxが必要です。Windows親機はNode.js 24以上とjustを使用し、PowerShellから実行できます。一時HTTPS URLの利用中はインターネット接続が必要です。
 
-Windowsでは、`make` とシェルを利用できる Git Bash または WSL で実行してください。
+当日のWindows構成は [親機・ゲームPCの手順](EVENT_SERVER_SETUP.md) を参照してください。
 
 ## 2. リポジトリを取得する
 
@@ -38,53 +40,9 @@ git -C apps/unity switch --track -c sanuka origin/sanuka
 
 ## 3. スマホコントローラーのサーバーを起動する
 
-リポジトリのルートディレクトリで、どちらかの起動方法を選びます。どちらもUnity用の接続設定を自動生成し、スマートフォンで開くためのHTTPS URLを表示します。
+ルートで `just phone-start` を実行します。Windowsではフォアグラウンドで起動しCtrl+Cで停止、Mac/Linuxではtmuxで起動し `just phone-stop` で停止します。Windowsのネット共有とscoreもまとめて起動する場合は `just server` を使います。
 
-Dockerイメージを使う場合:
-
-```sh
-make
-```
-
-ローカルのソースから起動する場合（Docker不要）:
-
-```sh
-make local
-```
-
-ソース起動時は依存パッケージを準備してサーバーをビルドし、スマートフォン用の一時HTTPS URLを発行します。このURL発行にはインターネット接続が必要です。URLはUnity画面に表示されるQRコードにも埋め込まれます。UnityでPlayを押すとQRコードが表示され、STUNで別ネットワークからの直接接続を試みます。ネットワーク制限によってはTURNサーバーが必要です。
-
-`make local` は `make phone-controller-local` の省略形です。サーバーが起動済みでも `apps/unity/Assets/StreamingAssets/controller-connection.json` を同期します。QRが表示されず、UnityのConsoleに `Host authentication failed` が出る場合は、再度 `make local` を実行してからUnityのPlayを停止・再開してください。
-
-サーバーはバックグラウンドで動作します。Docker起動時の状態確認、ログ表示、停止は次のコマンドで行えます。
-
-```sh
-make phone-controller-status
-make phone-controller-logs
-make phone-controller-stop
-```
-
-ローカルソース起動時は、次のコマンドを使います。
-
-```sh
-make phone-controller-local-status
-make phone-controller-local-logs
-make phone-controller-local-stop
-```
-
-停止した後に再起動する場合は、使った起動コマンドを再度実行します。
-
-```sh
-make phone-controller
-```
-
-### Windowsで環境変数を指定する場合
-
-Git Bashでは上記のコマンドをそのまま実行できます。PowerShellからは、Git BashまたはWSLのターミナルを使ってください。
-
-`make` はルートの `apps/phone` に正しいUnity設定パスを渡すため、個別の環境変数指定は不要です。
-
-`controller-connection.json` には接続用の一時的なキーが書き込まれます。これはローカル実行時に自動生成されるファイルなので、コミットしないでください。
+UnityはUDP42045でphoneサーバーを自動探索します。接続先ファイルやキーの手動配布は不要です。旧起動処理が生成する `controller-connection.json` は現在のUnityでは参照しません。起動した親機は1台だけにし、同じLANへ接続してください。
 
 ## 4. Unityプロジェクトを開く
 
@@ -93,31 +51,25 @@ Git Bashでは上記のコマンドをそのまま実行できます。PowerShel
 3. `Assets/Scenes/BattleGround.unity` を開く。
 4. Unity EditorのPlayボタンを押す。
 
-スマホサーバーを先に起動しておくと、Play開始時に接続設定が読み込まれ、ポーズ画面にP1/P2用のQRコードが表示されます。対戦中はEscでこの画面を開きます。
+スマホサーバーを先に起動しておくと、Play開始時に接続設定が読み込まれます。最初はタイトル画面です。Esc → コントローラ → P1/P2を選ぶと、選んだプレイヤーのQRコードが表示されます。どのモードでも登録できます。シングルプレイは両方で1人のキャラを操作し、共通メニューもどちらからでも操作できます。どの画面でもEscまたはリセット単独の0.5秒長押しで開閉できます。Yのデバッグ画面は削除しました。
 
-QRコードが表示されない場合は、次を確認してください。
-
-```text
-school-festival/apps/unity/Assets/StreamingAssets/controller-connection.json
-```
-
-`make` または `make local` を実行したこと、Unity Consoleにエラーが出ていないことを確認します。
+QRコードが表示されない場合は、phoneサーバーが起動していること、同じLANへ接続していること、UDP42045の探索とTCP8080の通信が通ることを確認します。
 
 ## 5. スマートフォンを接続する
 
 1. スマートフォンがインターネットに接続できることを確認する。別のWi-FiでもSTUN接続を試しますが、直接接続を遮断するネットワークではTURNが必要です。
-2. Unity画面に表示されたP1またはP2のQRコードをスマートフォンで読み取る。
-3. スマートフォン側で `センサーを使う` をタップする。
+2. UnityでEsc → コントローラ → P1/P2を選び、表示されたQRコードをスマートフォンで読み取る。
+3. スマートフォン側でセンサーのアイコンをタップする。
 4. モーションセンサーの利用許可を求められたら許可する。
-5. ニュートラルな姿勢で `リセンター` をタップする。
-6. Unityのポーズ画面で接続状態を確認する。
-7. `RESUME` またはEscで対戦を開始し、スマートフォンの動きで剣を操作できることを確認する。
+5. ニュートラルな姿勢でリセンターのアイコンをタップする。
+6. スマホが接続するとUnityが軸調整へ進む。6通りの軸順序から合うものを選び、「次へ」でX/Y/Zそれぞれの正転・反転を選ぶ。
+7. 「完了」で保存応答を受けたらEscメニューへ戻る。Escで閉じ、モード・キャラと色・ステージを選択して、スマートフォンの動きで剣を操作できることを確認する。
 
 iPhoneでは、センサーの許可ダイアログを表示するためにスマートフォン上のボタンをタップする必要があります。スマートフォン側のURLはHTTPSである必要があるため、表示されたURLまたはQRコードを使用してください。
 
-接続後は、スマートフォンを動かして武器の向きが変わることを確認します。`ガード` を押している間は、Unity画面のガード状態も変化します。2台使う場合は、1台をP1、もう1台をP2のQRコードに接続します。
+操作ボタンには文字を表示せず、アイコンだけを使っています。接続後は、スマートフォンを動かして武器の向きが変わることを確認します。ガードのアイコンを押している間は、Unity画面のガード状態も変化します。選択画面では剣を上下左右に振って移動し、ガードを押してキャラ・色を選択し、準備を決定します。リセットは短押しでメニューを含む全画面で向きを合わせ、0.5秒長押しで接続ポーズを開閉します。前の画面へは「もどる」を選び、ガードで決定します。キャラ選択の最下段では左に振ると「もどる」、右に振ると「プレビュー」を選べます。2台使う場合は、1台をP1、もう1台をP2のQRコードに接続します。
 
-QRコードを作り直す必要がある場合は、Escでポーズ画面を開き、`NEW QR` を押してください。ポーズ中も接続とセンサー値の受信は続き、再開時に最新の姿勢を反映します。
+QRコードを作り直す場合は、登録待ちから戻って再びP1/P2を選んでください。登録待ちの終了時にもQRのトークンを更新し、古いQRによる新規登録を防ぎます。ポーズ中も接続とセンサー値の受信は続き、再開時に最新の姿勢を反映します。
 
 ## 6. テスト時の確認項目
 
@@ -129,17 +81,27 @@ QRコードを作り直す必要がある場合は、Escでポーズ画面を開
 - Escでポーズ・再開しても接続を維持できる
 - UnityのPlay停止後、再度Playしても接続できる
 
-スマートフォンが未接続の場合、キーボードでも簡易テストできます。P1は矢印キー、P2はW/A/S/Dキーを使います。
+スマートフォンのDataChannelが接続中はスマホを優先し、未接続なら自作リモコンへ自動で切り替わります。接続中のスマホからセンサー値が届かなくなった場合は、その姿勢を無効にします。キーボードはスマホ／リモコンの使用中も併用でき、P1はW/A/S/D＋左Shiftでガード、P2は矢印キー＋右Shiftでガードを使います。
+
+ESPリモコンはPCと同じWi-Fiへ接続し、UDP42042番でUnityと直接通信します。受信機は不要です。ファームウェアの書き込みはUSB接続で行います。
+
+### ESPリモコンの書き込み
+
+PlatformIO CLI（`pio`）を用意し、ルート `.env` に `WIFI_SSID1` / `WIFI_PASS1` から `WIFI_SSID3` / `WIFI_PASS3` まで接続先を設定します。UnityをPlay（▶）にしておき、ESPを1台だけUSB接続して `just controller 1`、`just controller 2`、`just controller 3` のいずれかを実行してください。番号なしの `WIFI_SSID` / `WIFI_PASS` は1番として使えます。Play中でもUSB書き込みできます。ポートの明示指定は `PORT=/dev/cu.usbmodem... just controller 2` のようにします。
+
+書き込み後は各PCでEsc → コントローラ → P1/P2を選び、登録したい実機のガード＋リセットを1秒間同時押しします。登録できるとEscメニューへ戻ります。複数PCでは登録操作を1台ずつ行ってください。接続先とP1/P2は保存され、次回から再書き込み不要です。
+
+書き込み後はUSBを外して給電だけでも使えます。Wi-Fi設定を変えた場合は再度書き込んでください。スマホサーバーの起動は `just phone-start` です。
 
 ## 7. 終了する
 
 UnityのPlayを停止した後、スマホコントローラーのサーバーも停止します。
 
 ```sh
-make phone-controller-stop
+just phone-stop
 ```
 
-`make local` で起動した場合は `make phone-controller-local-stop` を使います。
+`just phone-start` で起動した場合は `just phone-stop` を使います。
 
 次回起動時は、新しいHTTPS URLが発行されることがあります。その場合は、前回のURLではなく、その回に表示されたQRコードを使ってください。
 
@@ -147,8 +109,8 @@ make phone-controller-stop
 
 ### スマートフォンでページを開けない
 
-- `make phone-controller-status` と `make phone-controller-logs` でサーバーが動作しているか確認する。
-- `make phone-controller` 実行時に表示された最新のURLを使う。
+- `sh apps/phone/scripts/local-control.sh status` と `sh apps/phone/scripts/local-control.sh logs` でサーバーが動作しているか確認する。
+- `just phone-start` 実行時に表示された最新のURLを使う。
 - PCとスマートフォンがインターネットに接続できるか確認する。
 - VPN、ゲストWi-Fi、Wi-Fiの端末間通信遮断（AP isolation）が有効になっていないか確認する。
 - PCのファイアウォールがローカル通信を遮断していないか確認する。
@@ -165,13 +127,13 @@ make phone-controller-stop
 - UnityがPlay中であることを確認する。
 - 正しいP1/P2のQRコードを読み取っているか確認する。
 - スマートフォンでセンサーを有効にしてから `リセンター` を押す。
-- `NEW QR` でQRコードを作り直す。
+- 登録待ちから戻ってP1/P2を選び直し、QRコードを作り直す。
 - Unity Consoleに接続エラーがないか確認する。
 
 ### UnityにQRコードが出ない
 
-- 対戦中はEscでポーズ画面を開く。
-- `apps/unity/Assets/StreamingAssets/controller-connection.json` が存在するか確認する。
-- ルートディレクトリで `make` または `make local` を実行したか確認する。
+- タイトル・選択画面・対戦中ともEsc → コントローラ → P1/P2を選ぶ。
+- 親機のphoneサーバーが起動し、UDP42045で探索できるか確認する。
+- ルートディレクトリで `just phone-start` を実行したか確認する。
 - Unityで `Assets/Scenes/BattleGround.unity` を開いているか確認する。
-- Unity Consoleの `Could not read ... controller-connection.json` などのエラーを確認する。
+- Unity Consoleの親機探索・WebSocket接続エラーを確認する。
