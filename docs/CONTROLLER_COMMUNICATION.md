@@ -79,3 +79,5 @@ USB接続中は同じ88 B入力を100 Hz目標でシリアルへも送る。応�
 - [Unity受信・接続応答・振動送信](../apps/unity/Assets/Scripts/HardwareControllerHub.cs)
 
 AP接続・スキャンの前提は[Espressif ESP32-C3 STA資料](https://docs.espressif.com/projects/esp-idf/en/latest/esp32c3/api-guides/wifi-driver/station-scenarios.html)を参照。
+
+実機ファームウェアの変更は元リポジトリへの [PR #1](https://github.com/22060/2026_koreisai_HW/pull/1) として提出しています。サブモジュールのURLは元リポジトリを使います。

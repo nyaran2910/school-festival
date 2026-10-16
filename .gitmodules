@@ -1,6 +1,6 @@
 [submodule "apps/kojo_HW"]
 	path = apps/kojo_HW
-	url = https://github.com/nyaran2910/2026_koreisai_HW.git
+	url = https://github.com/22060/2026_koreisai_HW.git
 
 [submodule "apps/phone"]
 	path = apps/phone
