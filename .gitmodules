@@ -9,3 +9,6 @@
 [submodule "apps/unity"]
 	path = apps/unity
 	url = https://github.com/nyaran2910/KosenChanbara.git
+[submodule "apps/score-server"]
+	path = apps/score-server
+	url = https://github.com/nyaran2910/KosenChanbaraScoreServer.git
