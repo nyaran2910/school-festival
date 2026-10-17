@@ -24,7 +24,7 @@ export async function acquireLock(file) {
 }
 
 export function start(command, args, options = {}) {
-  return spawn(command, args, { stdio: 'inherit', ...options });
+  return spawn(command, args, { stdio: 'inherit', detached: process.platform !== 'win32', ...options });
 }
 export function completed(child) {
   return new Promise((resolve, reject) => {
@@ -38,8 +38,21 @@ export async function stop(child) {
   if (process.platform === 'win32') {
     // Kill the complete owned process tree, including Wrangler's cloudflared.
     await completed(start('taskkill.exe', ['/PID', String(child.pid), '/T', '/F'], { stdio: 'ignore' })).catch(() => {});
-  } else child.kill('SIGTERM');
-  await Promise.race([exited, new Promise(resolve => { const timer = setTimeout(() => { child.kill('SIGKILL'); resolve(); }, 3000); timer.unref(); })]);
+  } else {
+    try { process.kill(-child.pid, 'SIGTERM'); }
+    catch (error) { if (error.code !== 'ESRCH') throw error; }
+  }
+  let timer;
+  try {
+    await Promise.race([exited, new Promise(resolve => {
+      timer = setTimeout(() => {
+        if (process.platform === 'win32') child.kill('SIGKILL');
+        else { try { process.kill(-child.pid, 'SIGKILL'); } catch {} }
+        resolve();
+      }, 3000);
+      timer.unref();
+    })]);
+  } finally { clearTimeout(timer); }
 }
 export async function health(url, timeout = 3000) {
   try { const response = await fetch(url, { signal: AbortSignal.timeout(timeout) }); return response.ok; }

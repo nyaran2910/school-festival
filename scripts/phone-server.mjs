@@ -5,6 +5,7 @@ import { readFile, writeFile, access } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { acquireLock, start, completed, stop, waitHealth } from './server-process.mjs';
+import { findCloudflared } from './cloudflared.mjs';
 
 const root = fileURLToPath(new URL('../apps/phone/', import.meta.url));
 const state = path.join(root, '.local');
@@ -48,8 +49,14 @@ try {
   await npm(['run', 'build']);
   const port = Number(process.env.LOCAL_PORT ?? 8080);
   if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('Invalid LOCAL_PORT');
+  const tunnelEnv = { ...process.env, CI: '1', NO_COLOR: '1' };
+  const cloudflared = await findCloudflared();
+  if (cloudflared) {
+    tunnelEnv.CLOUDFLARED_PATH = cloudflared;
+    console.log(`Using local cloudflared: ${cloudflared}`);
+  }
   const tunnel = child(process.execPath, ['node_modules/wrangler/bin/wrangler.js', 'tunnel', 'quick-start', `http://127.0.0.1:${port}`],
-    { env: { ...process.env, CI: '1', NO_COLOR: '1' }, stdio: ['ignore', 'pipe', 'pipe'] });
+    { env: tunnelEnv, stdio: ['ignore', 'pipe', 'pipe'] });
   const publicUrl = await new Promise((resolve, reject) => {
     let output = '';
     const timer = setTimeout(() => reject(new Error('HTTPS tunnel URL timed out. Check the school Wi-Fi login and tunnel access.')), 60000);

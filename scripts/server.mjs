@@ -2,6 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { readFile, rm, access } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { configureMacNetwork, sharingHelp } from './server-network-macos.mjs';
 import { acquireLock, start, stop, waitHealth } from './server-process.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
@@ -48,14 +49,16 @@ function launch(script, env) {
   return child;
 }
 try {
-  if (process.platform !== 'win32') throw new Error('just server configures a Windows parent PC. On this OS use just phone-start and just score-server.');
+  if (!['win32', 'darwin'].includes(process.platform)) throw new Error('just server supports Windows and macOS.');
   if (Number(process.versions.node.split('.')[0]) < 24) throw new Error('Install Node.js 24 or newer.');
   release = await acquireLock(path.join(state, 'server.lock'));
   await access(path.join(root, 'apps/phone/package-lock.json'));
   await access(path.join(root, 'apps/score-server/src/index.mjs'));
-  const network = JSON.parse((await readFile(configureNetwork(), 'utf8')).replace(/^\uFEFF/, ''));
+  const network = process.platform === 'darwin' ? configureMacNetwork() :
+    JSON.parse((await readFile(configureNetwork(), 'utf8')).replace(/^\uFEFF/, ''));
+  if (process.platform === 'darwin') console.log(sharingHelp);
   console.log(`Internet: ${network.wifiAlias} -> LAN: ${network.lanAlias} (${network.lanAddress})`);
-  console.log('Router must be in AP/bridge mode with DHCP off; connect the parent to a LAN port.');
+  if (process.platform === 'win32') console.log('Router must be in AP/bridge mode with DHCP off; connect the parent to a LAN port.');
   const env = { ...process.env, PHONE_LAN_ADDRESS: network.lanAddress, LOCAL_PORT: '8080', PHONE_DISCOVERY_PORT: '42045',
     PORT: '8080', SCORE_PORT: '3080', SCORE_DISCOVERY_PORT: '42044', SCORE_HOST: '0.0.0.0', KOSEN_SERVER_NETWORK_READY: '1' };
   // These ports are also configured by the elevated helper.

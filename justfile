@@ -39,3 +39,8 @@ phone-start:
 [windows]
 phone-stop:
     @echo 'Use Ctrl+C in the phone-start or server window.'
+
+# Bare ESP: USB pairing command and live Wi-Fi/Unity acknowledgement status.
+[unix]
+controller-test *args:
+    python3 scripts/controller_debug.py {{args}}

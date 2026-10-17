@@ -2,6 +2,16 @@
 
 令和8年の文化祭出し物の総合管理レポジトリ
 
+## 安定版（2026-10-17）
+
+現在の安定版はタグ **`stable-2026-10-17`** です。ゲーム・実機・スマホ・スコアサーバーを含む、この時点の構成を固定しています。
+
+安定版を取得する場合は次を実行します。
+
+```sh
+git clone --branch stable-2026-10-17 --recurse-submodules https://github.com/nyaran2910/school-festival.git
+```
+
 ## アプリ
 
 - `apps/kojo_HW/`: 古城作のハードウェア管理レポジトリ
@@ -32,13 +42,17 @@ ESPへの書き込みは `make controller` です。
 
 全画面でEscまたはリセットの0.5秒長押しが接続ポーズです。Yのデバッグ画面は削除しました。リセットの短押しはメニューを含む全画面で向きを合わせます。前の画面へは「もどる」を選んでガードで決定します。キャラ選択では最下段で左に振ると「もどる」、右に振ると「プレビュー」を選べます。両方のコントローラで共通メニューとシングルのキャラを操作できます。デュエルのキャラ選択と対戦ではそれぞれのプレイヤーを操作します。スマホ接続中はスマホ、未接続ならリモコンを自動で使います。キーボードはいつでも併用でき、P1はWASD＋左Shift、P2は矢印キー＋右Shiftを使います。
 
+センサー・ボタンなしのESP単体で通信を確認する場合、Macで `just controller-test` を実行します。初回は `just controller-test --upload --wifi 3` のように `.env` のWi-Fi番号を指定して対応ファームウェアを書き込みます（現在のTP-Link_F4B4は3番）。WindowsのUnityでEsc → コントローラ → P1/P2の登録待ちを開き、Macのテスト画面で `p` + Enterを入力すると登録を開始します。登録先はESPに保存されます。毎秒表示する `paired=1` は登録済み、`udpAckAgeMs` が0以上1200未満なら直近にUnityがUDP入力を受理して応答しています。`-1` は起動後まだUDP応答なしです。ESP単体では `imu=none` が正常で、姿勢操作は確認できません。終了はCtrl+C。ポート指定は `--port /dev/cu.usbmodem101`、時間指定は `--seconds 10` です。Python標準ライブラリのみを使い、Mac/Linuxで動作します。
+
 自作ESPリモコンは同じWi-FiのPCと直接通信でき、受信機は不要です。今後のファームウェア書き込みはESPをUSB接続して行い、ゲーム中の通信にはWi-Fi UDPを使います。ビルド・USB書き込み・接続方法は [`apps/kojo_HW/docs/PROTOCOL.md`](apps/kojo_HW/docs/PROTOCOL.md) を参照してください。
 
-## Windows親機でまとめて起動
+## 親機でまとめて起動（Windows／Mac）
 
 学校Wi-Fiへ接続し、AP／ブリッジモード（DHCPオフ）のルータへ有線接続したWindows親機で `just server` を実行します。Git・Node.js 24以上・justを用意し、`git clone --recurse-submodules` で取得してください。Windowsの共有設定、LAN通信許可、phoneの依存導入とビルド、HTTPSトンネル、phone-server、score-serverをまとめて起動します。初回のWindowsの管理者確認は許可してください。
 
 ゲームPC4台は `just build` の配布フォルダーを配置し、同じルータへ接続して「ゲーム起動.cmd」を実行します。phoneはUDP42045、scoreはUDP42044で自動探索するため、IP・キーの入力は不要です。親機でゲームを起動する必要はありません。
+
+Macでも `just server` を使えます。Wi-Fiをsiriusなどのテザリング、有線LANをルーター側につなぎ、初回はmacOSの「一般 → 共有 → インターネット共有」でWi-Fiから有線LANへの共有をオンにしてください。Macの共有設定は自動変更せず、起動時に有線LANのIPを検出します。
 
 ルータのAP化、学校Wi-Fiの接続・ログインは手動です。詳しくは [当日の親機・ゲームPCの手順](docs/EVENT_SERVER_SETUP.md) を参照してください。
 

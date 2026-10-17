@@ -31,3 +31,26 @@ test('readiness waits for the owned HTTP service and stop terminates it', async 
   assert(service.exitCode !== null || service.signalCode !== null);
   await assert.rejects(waitHealth('http://127.0.0.1:1', [service], 100), /Server stopped/);
 });
+
+test('POSIX stop also terminates a tunnel grandchild', { skip: process.platform === 'win32' }, async t => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), 'sf-process-tree-'));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const heartbeat = path.join(directory, 'heartbeat');
+  const service = start(process.execPath, ['-e', `
+    const child = require('child_process').spawn(process.execPath, ['-e',
+      'const fs=require("fs");setInterval(()=>fs.appendFileSync(process.argv[1],"."),20)', ${JSON.stringify(heartbeat)}], {stdio:'ignore'});
+    console.log(child.pid); setInterval(()=>{},1000);
+  `], { stdio: ['ignore', 'pipe', 'inherit'] });
+  t.after(() => stop(service));
+  await once(service.stdout, 'data');
+  const { readFile } = await import('node:fs/promises');
+  for (let i = 0; i < 100; ++i) {
+    try { if ((await readFile(heartbeat)).length) break; } catch {}
+    await new Promise(resolve => setTimeout(resolve, 20));
+  }
+  assert((await readFile(heartbeat)).length > 0);
+  await stop(service);
+  const size = (await readFile(heartbeat)).length;
+  await new Promise(resolve => setTimeout(resolve, 100));
+  assert.equal((await readFile(heartbeat)).length, size);
+});

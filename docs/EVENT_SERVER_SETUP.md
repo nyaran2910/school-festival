@@ -1,8 +1,29 @@
-# 当日の親機WindowsとゲームPC
+# 当日の親機とゲームPC
 
 親機1台でphoneサーバー・一時HTTPSトンネル・score-serverを起動し、学校Wi-Fiを有線LANへ共有します。ゲームPC4台とスマホは既存ルータのLANへ接続します。親機ではゲームの起動は不要です。
 
-## 一度だけ準備すること
+
+## Macを親機にする場合
+
+`just server` はmacOSでもphone・HTTPSトンネル・score-serverをまとめて起動します。Node.js 24以上とjustを用意してください。
+
+1. MacのWi-Fiを上流のテザリング（sirius）へ接続します。
+2. USB有線LANアダプターをMacへ接続し、ルーターのLANポートへつなぎます。アダプターがmacOSのネットワーク設定に現れることを確認します。AX88179など別途ドライバーが必要な機器は先に導入します。
+3. ルーターをAP／ブリッジモード、DHCPオフにします。
+4. macOSの「システム設定 → 一般 → 共有 → インターネット共有」で、共有元をWi-Fi、共有先を接続した有線LANにしてオンにします。macOSがLAN側のIP配布とインターネット共有を担当します。この初回設定は`just server`では変更しません。
+5. 他のPC・スマホ・実機コントローラをルーター側へ接続し、Macで`just server`を実行します。実機はルーターのSSIDを書き込んで使います。
+
+起動時に有線LANのIPv4を選び、phoneの探索応答に使います。共有用のbridgeインターフェースにも対応します。有線が未接続・IP未取得、候補が複数、上流とLANのIP帯が重複している場合は停止して理由を表示します。複数アダプターがある場合は`KOSEN_WIFI_ADAPTER=en0 KOSEN_LAN_ADAPTER=en7 just server`のようにデバイス名で指定できます。
+
+Macのネットワークサービス順序はWi-Fiを有線LANより上にします。上流への通信はテザリング、有線側はゲーム用LANとして使います。共有のオン／オフやLANアドレスの変更後は`just server`を起動し直してください。他のPCもIPを取得し直すためルーターへ再接続します。
+
+macOSがNode.jsの受信通信やローカルネットワークの許可を求めた場合は許可してください。Ctrl+Cでサーバーとトンネルを停止し、インターネット共有の設定は残します。ルーターが独自にDHCPを提供する既存LANでもサーバーは起動できますが、他のPCのインターネット接続をMac経由にするには上記の共有構成を使います。
+
+テザリングのDNSが新しいtrycloudflare.comのURLを名前解決できず、HTTPS起動がタイムアウトする場合があります。公開DNSでは解決できることを確認したうえで、MacのWi-FiのDNSを1.1.1.1／1.0.0.1へ変更します。自動取得へ戻す場合は`networksetup -setdnsservers Wi-Fi Empty`を実行します。
+
+Appleの手順: https://support.apple.com/guide/mac-help/mchlp1540/mac
+
+## Windowsで一度だけ準備すること
 
 1. 既存ルータを **AP／ブリッジモード** にします。ルータ側のDHCPサーバーはオフにします。親機はLANポートへ接続します。APモード時のポートの用途は機種の説明書を確認してください。Windowsから機種不明のルータの設定は変更できません。
 2. 親機にGit、**Node.js 24以上（npm付属）**、**just**を導入します。Unity・Python・tmux・WSLは不要です。
@@ -34,6 +55,8 @@ just server
 - 一時HTTPSトンネル、phoneサーバー、自動探索、score-serverを起動。
 
 `Phone server ready` が出るまで待ちます。学校のネットワークでトンネル通信が遮断されている場合はエラーで停止します。アプリ側では学校の接続制限やログインを解除できません。
+
+HTTPSトンネルは、`CLOUDFLARED_PATH` の指定、PATH上のインストール済みcloudflared（MacではHomebrewの標準パスも検索）、Wranglerの保存済みcloudflaredの順に利用します。保存済みはバージョンが新しく、`--version` が正常に動くものを選びます。ローカルの実行ファイルがあれば更新サービスへの問い合わせを省略するため、`Failed to determine the latest cloudflared version` を回避できます。見つからない初回はWranglerがダウンロードします。Macでは先に `brew install cloudflared` で導入することもできます。トンネル自体にはインターネット接続が必要です。
 
 起動したPowerShellを開いたままにします。Ctrl+Cで全サーバーを停止します。共有設定とファイアウォール設定は次回のために残ります。scoreのDBは `apps/score-server/data/scores.sqlite` に保存されます。
 
