@@ -5,17 +5,17 @@
 
 ## Macを親機にする場合
 
-`just server` はmacOSでもphone・HTTPSトンネル・score-serverをまとめて起動します。Node.js 24以上とjustを用意してください。
+`just server-start` はmacOSでもphone・HTTPSトンネル・score-serverをまとめて起動します。Node.js 24以上とjustを用意してください。
 
 1. MacのWi-Fiを上流のテザリング（sirius）へ接続します。
 2. USB有線LANアダプターをMacへ接続し、ルーターのLANポートへつなぎます。アダプターがmacOSのネットワーク設定に現れることを確認します。AX88179など別途ドライバーが必要な機器は先に導入します。
 3. ルーターをAP／ブリッジモード、DHCPオフにします。
-4. macOSの「システム設定 → 一般 → 共有 → インターネット共有」で、共有元をWi-Fi、共有先を接続した有線LANにしてオンにします。macOSがLAN側のIP配布とインターネット共有を担当します。この初回設定は`just server`では変更しません。
-5. 他のPC・スマホ・実機コントローラをルーター側へ接続し、Macで`just server`を実行します。実機はルーターのSSIDを書き込んで使います。
+4. macOSの「システム設定 → 一般 → 共有 → インターネット共有」で、共有元をWi-Fi、共有先を接続した有線LANにしてオンにします。macOSがLAN側のIP配布とインターネット共有を担当します。この初回設定は`just server-start`では変更しません。
+5. 他のPC・スマホ・実機コントローラをルーター側へ接続し、Macで`just server-start`を実行します。実機はルーターのSSIDを書き込んで使います。
 
-起動時に有線LANのIPv4を選び、phoneの探索応答に使います。共有用のbridgeインターフェースにも対応します。有線が未接続・IP未取得、候補が複数、上流とLANのIP帯が重複している場合は停止して理由を表示します。複数アダプターがある場合は`KOSEN_WIFI_ADAPTER=en0 KOSEN_LAN_ADAPTER=en7 just server`のようにデバイス名で指定できます。
+起動時に有線LANのIPv4を選び、phoneの探索応答に使います。共有用のbridgeインターフェースにも対応します。有線が未接続・IP未取得、候補が複数、上流とLANのIP帯が重複している場合は停止して理由を表示します。複数アダプターがある場合は`KOSEN_WIFI_ADAPTER=en0 KOSEN_LAN_ADAPTER=en7 just server-start`のようにデバイス名で指定できます。
 
-Macのネットワークサービス順序はWi-Fiを有線LANより上にします。上流への通信はテザリング、有線側はゲーム用LANとして使います。共有のオン／オフやLANアドレスの変更後は`just server`を起動し直してください。他のPCもIPを取得し直すためルーターへ再接続します。
+Macのネットワークサービス順序はWi-Fiを有線LANより上にします。上流への通信はテザリング、有線側はゲーム用LANとして使います。共有のオン／オフやLANアドレスの変更後は`just server-start`を起動し直してください。他のPCもIPを取得し直すためルーターへ再接続します。
 
 macOSがNode.jsの受信通信やローカルネットワークの許可を求めた場合は許可してください。Ctrl+Cでサーバーとトンネルを停止し、インターネット共有の設定は残します。ルーターが独自にDHCPを提供する既存LANでもサーバーは起動できますが、他のPCのインターネット接続をMac経由にするには上記の共有構成を使います。
 
@@ -43,7 +43,7 @@ cd school-festival
 3. リポジトリのフォルダーで実行します。
 
 ```powershell
-just server
+just server-start
 ```
 
 初回やアダプタ・Node.jsの場所が変わったときにはWindowsの管理者確認を許可します。自動で以下を行います。
@@ -68,7 +68,7 @@ Wi-Fiや有線が複数あって選べない場合は、PowerShellで名前を�
 Get-NetAdapter -Physical
 $env:KOSEN_WIFI_ADAPTER = 'Wi-Fi'
 $env:KOSEN_LAN_ADAPTER = 'Ethernet'
-just server
+just server-start
 ```
 
 学校Wi-FiとICSのLANのIP帯が重なる場合や、学校の管理ポリシーで共有が禁止される場合は自動設定できません。ICSは通常192.168.137.0/24を使いますが、ゲーム側でこのIPを固定しているわけではありません。
@@ -96,3 +96,29 @@ phoneの接続先ファイル・環境変数は使用しません。古い配布
 - 親機やphoneを再起動した場合は、新しいQRでスマホを開き直す。一時HTTPS URLは以前のものを使い続けない。
 
 WindowsのICSの仕組み: https://learn.microsoft.com/en-us/windows/win32/nativewifi/using-hosted-network-and-internet-connection-sharing
+
+ゲーム内のEsc→コントローラ→P1/P2には「① Wi-Fi接続」「② ゲーム接続」のQRを表示します。親機のルート `.env` の `WIFI_SSID1` / `WIFI_PASS1`（既存実機用のAP設定、番号なしも可）を使い、`just server-start` を再起動すると各ゲームPCへ自動配信します。上流の学校Wi-Fiではなく、スマホ・子機が接続するAPの情報を設定してください。未設定時はWi-Fi QRを表示せず未設定と案内します。Wi-Fi接続済みのスマホは②だけ読み取ります。
+
+起動は `just server-start`、停止は別ターミナルで `just server-stop` を使います。停止は親機と記録済みのphone・score・HTTPSトンネルの残存プロセスを終了し、起動していなければ何もせず成功します。インターネット共有・APの設定は維持します。`.env` の変更後は停止してから起動し直してください。
+
+WindowsでQRが表示されない場合、配布フォルダーの「ゲーム起動.cmd」から起動して通信許可を適用してください。既にゲームが起動中なら「LAN通信修復.cmd」でも同じexeへのLAN内UDP通信許可を修復できます。phone探索はブロードキャストと、同一LANのゲートウェイへの直接問い合わせを併用します。
+
+
+## MacのAX88179共有LAN
+
+AX88179のUSB有線アダプターをMacのインターネット共有に使う場合、共有ブリッジのMAC宛てのユニキャストだけが届かないことがあります。今回の実機では、本来のアダプターMAC宛てのARP応答は受信でき、共有ブリッジMAC宛ての応答は受信できませんでした。
+
+`just server-start` は、選択した共有ブリッジの有線メンバーがAX88179の1台だけであることを確認し、ブリッジのMACをそのアダプターのMACに合わせます。名前・IP・MACは起動時に検出します。一致済みなら変更せず、メンバーが複数なら補正せずエラーで停止します。macOSは一般ユーザーへMACをマスクするため、実MACの確認と補正にだけ `sudo /sbin/ifconfig` を使います。必要な場合はターミナルで管理者パスワードを入力してください。phone・scoreは元のユーザー権限で起動します。
+
+変更前のMACは `.server/mac-bridge-backups.jsonl` へ追記します。補正後にMACとLANのIPv4を確認できなければ元のMACへ戻して起動を中止します。復元も失敗した場合はその理由を表示します。手動で戻す場合は記録中の `bridge` と `originalMac` を使い、`sudo /sbin/ifconfig <bridge> ether <originalMac>` を実行してください。
+
+補正直後は端末の古いARP情報が残ることがあります。Windowsは管理者PowerShellで `arp -d 192.168.2.1`（現在の親機LANアドレスに合わせる）、スマホは会場Wi-Fiへ接続し直してください。`just server-stop` はMAC補正やインターネット共有を解除しません。共有の作り直しでMACが戻った場合も、次回の `server-start` で再確認・補正します。Wi-Fi共有元、DHCP、上流の経路はこの補正では変更しません。
+
+Cloudflareの一時HTTPS発行が429で制限された場合、phoneは60秒→120秒→最大300秒間隔で自動再試行します。待機期限は `apps/phone/.local/tunnel-retry.json` に保存し、再起動しても待機を引き継ぎます。起動コマンドを繰り返す必要はありません。待機中、およびphoneだけが終了した場合もスコアは継続します。スコア自体の起動失敗は親機全体のエラーとして扱います。`server-stop` は待機中のphoneも終了します。
+
+
+## 固定Cloudflare Tunnel
+
+Cloudflare側で固定トンネルを作り、公開ホスト名の転送先を `http://127.0.0.1:8080` に設定します。親機のルート `.env` に `CLOUDFLARE_TUNNEL_TOKEN` と `PUBLIC_BASE_URL=https://公開ホスト名` を両方追加すると、`just server-start` はQuick Tunnelの発行を行わず固定トンネルへ接続します。片方だけの指定、HTTP、パス付きURLは設定エラーにします。設定なしの場合は従来のQuick Tunnelです。
+
+固定モードにはローカルのcloudflaredが必要です。トークンを一時的に `apps/phone/.local/fixed-tunnel-token`（所有者のみ読み書き可）へ保存し、`--token-file` で渡します。トークン本体は起動引数やプロセス記録へ書かず、停止時にこの生成ファイルを削除します。元の `.env` は維持します。`just server-stop` は固定トンネルも停止します。公開URLのhealthz応答を確認してからphoneの起動完了を表示します。

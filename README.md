@@ -46,13 +46,15 @@ ESPへの書き込みは `make controller` です。
 
 自作ESPリモコンは同じWi-FiのPCと直接通信でき、受信機は不要です。今後のファームウェア書き込みはESPをUSB接続して行い、ゲーム中の通信にはWi-Fi UDPを使います。ビルド・USB書き込み・接続方法は [`apps/kojo_HW/docs/PROTOCOL.md`](apps/kojo_HW/docs/PROTOCOL.md) を参照してください。
 
+Mac/Linuxで実機コントローラのUDP通信を監視するには `just controller-udp` を使います。`tcpdump`（要インストール）を管理者権限で起動し、PC側42042番への接続用ブロードキャスト（KP v1の登録要求Request・再探索Discover）を受け取った時だけ表示します。操作データやユニキャストの応答は表示しません。Unityと同時に実行でき、終了はCtrl+Cです。標準ではtcpdumpが選んだインターフェースを使います。指定する場合は `just controller-udp -i en0`、パケット内容も見る場合は `just controller-udp -X` を実行します。別のPCとESP間のユニキャスト通信は通常見えないため、ゲームを動かすPC上で実行してください。
+
 ## 親機でまとめて起動（Windows／Mac）
 
-学校Wi-Fiへ接続し、AP／ブリッジモード（DHCPオフ）のルータへ有線接続したWindows親機で `just server` を実行します。Git・Node.js 24以上・justを用意し、`git clone --recurse-submodules` で取得してください。Windowsの共有設定、LAN通信許可、phoneの依存導入とビルド、HTTPSトンネル、phone-server、score-serverをまとめて起動します。初回のWindowsの管理者確認は許可してください。
+学校Wi-Fiへ接続し、AP／ブリッジモード（DHCPオフ）のルータへ有線接続したWindows親機で `just server-start` を実行します。Git・Node.js 24以上・justを用意し、`git clone --recurse-submodules` で取得してください。Windowsの共有設定、LAN通信許可、phoneの依存導入とビルド、HTTPSトンネル、phone-server、score-serverをまとめて起動します。初回のWindowsの管理者確認は許可してください。
 
 ゲームPC4台は `just build` の配布フォルダーを配置し、同じルータへ接続して「ゲーム起動.cmd」を実行します。phoneはUDP42045、scoreはUDP42044で自動探索するため、IP・キーの入力は不要です。親機でゲームを起動する必要はありません。
 
-Macでも `just server` を使えます。Wi-Fiをsiriusなどのテザリング、有線LANをルーター側につなぎ、初回はmacOSの「一般 → 共有 → インターネット共有」でWi-Fiから有線LANへの共有をオンにしてください。Macの共有設定は自動変更せず、起動時に有線LANのIPを検出します。
+Macでも `just server-start` を使えます。Wi-Fiをsiriusなどのテザリング、有線LANをルーター側につなぎ、初回はmacOSの「一般 → 共有 → インターネット共有」でWi-Fiから有線LANへの共有をオンにしてください。Macの共有設定は自動変更せず、起動時に有線LANのIPを検出します。
 
 ルータのAP化、学校Wi-Fiの接続・ログインは手動です。詳しくは [当日の親機・ゲームPCの手順](docs/EVENT_SERVER_SETUP.md) を参照してください。
 

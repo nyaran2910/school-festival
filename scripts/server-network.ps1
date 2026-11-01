@@ -94,7 +94,7 @@ try {
         if ($CheckOnly) { exit 10 }
         Start-Sleep -Milliseconds 500
     }
-    if ($addresses.Count -ne 1) { throw 'The shared Ethernet IPv4 address is not ready. Run just server again.' }
+    if ($addresses.Count -ne 1) { throw 'The shared Ethernet IPv4 address is not ready. Run just server-start again.' }
     $lanAddress = $addresses[0].IPAddress
     $prefix = $addresses[0].PrefixLength
     if ($prefix -ne 24) { throw 'Expected a /24 ICS LAN. Check Windows Internet Connection Sharing settings.' }

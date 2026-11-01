@@ -40,7 +40,7 @@ git -C apps/unity switch --track -c sanuka origin/sanuka
 
 ## 3. スマホコントローラーのサーバーを起動する
 
-ルートで `just phone-start` を実行します。Windowsではフォアグラウンドで起動しCtrl+Cで停止、Mac/Linuxではtmuxで起動し `just phone-stop` で停止します。Windowsのネット共有とscoreもまとめて起動する場合は `just server` を使います。
+ルートで `just phone-start` を実行します。Windowsではフォアグラウンドで起動しCtrl+Cで停止、Mac/Linuxではtmuxで起動し `just phone-stop` で停止します。Windowsのネット共有とscoreもまとめて起動する場合は `just server-start` を使います。
 
 UnityはUDP42045でphoneサーバーを自動探索します。接続先ファイルやキーの手動配布は不要です。旧起動処理が生成する `controller-connection.json` は現在のUnityでは参照しません。起動した親機は1台だけにし、同じLANへ接続してください。
 

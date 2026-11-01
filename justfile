@@ -29,8 +29,12 @@ build: unity-build
 
 
 # Windows parent: network sharing, phone HTTPS/signaling and shared scores.
-server:
+server-start:
     node scripts/server.mjs
+
+# Stop the parent servers, including remaining owned child processes.
+server-stop:
+    node scripts/server-stop.mjs
 
 [windows]
 phone-start:
@@ -38,9 +42,14 @@ phone-start:
 
 [windows]
 phone-stop:
-    @echo 'Use Ctrl+C in the phone-start or server window.'
+    @echo 'Use Ctrl+C in the phone-start or server-start window.'
 
 # Bare ESP: USB pairing command and live Wi-Fi/Unity acknowledgement status.
 [unix]
 controller-test *args:
     python3 scripts/controller_debug.py {{args}}
+
+# Show controller pairing/discovery broadcasts only (Ctrl+C to stop).
+[unix]
+controller-udp *args:
+    sudo tcpdump -n -l -tttt -v {{args}} 'ether broadcast and udp dst port 42042 and (udp[8:4] = 0x4b500101 or udp[8:4] = 0x4b500105)'

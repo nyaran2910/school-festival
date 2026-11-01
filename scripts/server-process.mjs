@@ -1,3 +1,4 @@
+import { remember } from './server-registry.mjs';
 import { spawn } from 'node:child_process';
 import { mkdir, open, readFile, rm } from 'node:fs/promises';
 import path from 'node:path';
@@ -24,7 +25,9 @@ export async function acquireLock(file) {
 }
 
 export function start(command, args, options = {}) {
-  return spawn(command, args, { stdio: 'inherit', detached: process.platform !== 'win32', ...options });
+  const child = spawn(command, args, { stdio: 'inherit', detached: process.platform !== 'win32', ...options });
+  remember(process.env.KOSEN_SERVER_PROCESS_FILE, child.pid, process.platform !== 'win32');
+  return child;
 }
 export function completed(child) {
   return new Promise((resolve, reject) => {

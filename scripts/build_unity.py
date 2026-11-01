@@ -122,6 +122,7 @@ def package():
         "exit /b %errorlevel%", "",
     ])
     (OUTPUT / "ゲーム起動.cmd").write_bytes(launcher.replace("\n", "\r\n").encode("ascii"))
+    shutil.copyfile(ROOT / "scripts/allow-controller-firewall.cmd", OUTPUT / "LAN通信修復.cmd")
     print(f"USB-ready folder: {OUTPUT}\nCopy the entire unity folder to the Windows Desktop, then open ゲーム起動.cmd.")
 
 

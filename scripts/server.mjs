@@ -1,3 +1,4 @@
+import { remember } from './server-registry.mjs';
 import { spawnSync } from 'node:child_process';
 import { readFile, rm, access } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
@@ -38,23 +39,28 @@ function configureNetwork() {
   if (result.status !== 0) throw new Error(`Cannot prepare Windows network: ${result.error?.message ?? result.stderr?.trim() ?? result.status}`);
   return output;
 }
-function launch(script, env) {
+function launch(script, env, critical = true) {
   const child = start(process.execPath, [script], { cwd: root, env });
   children.add(child);
-  child.once('error', error => { console.error(error.message); void shutdown(1); });
+  child.once('error', error => { children.delete(child); console.error(error.message); if (critical) void shutdown(1); });
   child.once('exit', code => {
     children.delete(child);
-    if (!stopping) { console.error(`A server stopped (${code}). Stopping the other services.`); void shutdown(1); }
+    if (!stopping) {
+      if (critical) { console.error(`Score server stopped (${code}). Stopping the services.`); void shutdown(1); }
+      else console.error(`Phone service stopped (${code}). Score server remains available. Fix the reported error, then restart with server-stop / server-start.`);
+    }
   });
   return child;
 }
 try {
-  if (!['win32', 'darwin'].includes(process.platform)) throw new Error('just server supports Windows and macOS.');
+  if (!['win32', 'darwin'].includes(process.platform)) throw new Error('just server-start supports Windows and macOS.');
   if (Number(process.versions.node.split('.')[0]) < 24) throw new Error('Install Node.js 24 or newer.');
   release = await acquireLock(path.join(state, 'server.lock'));
+  process.env.KOSEN_SERVER_PROCESS_FILE = path.join(state, 'processes.jsonl');
+  remember(process.env.KOSEN_SERVER_PROCESS_FILE, process.pid);
   await access(path.join(root, 'apps/phone/package-lock.json'));
   await access(path.join(root, 'apps/score-server/src/index.mjs'));
-  const network = process.platform === 'darwin' ? configureMacNetwork() :
+  const network = process.platform === 'darwin' ? configureMacNetwork({ stateDir: state }) :
     JSON.parse((await readFile(configureNetwork(), 'utf8')).replace(/^\uFEFF/, ''));
   if (process.platform === 'darwin') console.log(sharingHelp);
   console.log(`Internet: ${network.wifiAlias} -> LAN: ${network.lanAlias} (${network.lanAddress})`);
@@ -64,9 +70,9 @@ try {
   // These ports are also configured by the elevated helper.
   delete env.PHONE_HOST;
   await rm(path.join(root, 'apps/phone/.local/public-url'), { force: true });
-  const phone = launch('scripts/phone-server.mjs', env);
+  const phone = launch('scripts/phone-server.mjs', env, false);
   const score = launch('apps/score-server/src/index.mjs', env);
-  await waitHealth('http://127.0.0.1:3080/health', [phone, score]);
+  await waitHealth('http://127.0.0.1:3080/health', [score]);
   console.log('Score server ready. Phone dependency installation and HTTPS startup continue in this window.');
   // phone-server prints ready only after both local and public checks pass.
   console.log('Keep this window open. Ctrl+C stops all server processes. Network sharing remains enabled.');
